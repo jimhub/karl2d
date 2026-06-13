@@ -4383,6 +4383,9 @@ Init_Options :: struct {
 	// platforms, such as Linux+Wayland, it does not work, because Wayland always auto scales all
 	// windows.
 	disable_auto_scale_hint: bool,
+
+	// Enable depth buffer support
+	depth_buffer: bool,
 }
 
 Shader_Handle :: distinct Handle

@@ -48,6 +48,7 @@ WebGL_State :: struct {
 	vertex_buffer_gpu: gl.Buffer,
 	textures: hm.Dynamic_Handle_Map(WebGL_Texture, Texture_Handle),
 	render_targets: hm.Dynamic_Handle_Map(WebGL_Render_Target, Render_Target_Handle),
+	clear_mask: u32,
 }
 
 WebGL_Shader_Constant_Buffer :: struct {
@@ -144,6 +145,12 @@ webgl_init :: proc(
 		context_attribs += { .disableAntialias }
 	}
 
+	if options.depth_buffer {
+		context_attribs -= { .disableDepth }
+	} else {
+		context_attribs += { .disableDepth }
+	}
+
 	context_ok := gl.CreateCurrentContextById(s.canvas_id, context_attribs)
 	log.ensuref(context_ok, "Could not create context for canvas ID %s", s.canvas_id)
 	set_context_ok := gl.SetCurrentContextById(s.canvas_id)
@@ -157,6 +164,15 @@ webgl_init :: proc(
 
 	gl.Disable(gl.CULL_FACE)
 	gl.Enable(gl.BLEND)
+
+	s.clear_mask = u32(gl.COLOR_BUFFER_BIT)
+
+	if options.depth_buffer {
+		gl.Enable(gl.DEPTH_TEST)
+		s.clear_mask |= u32(gl.DEPTH_BUFFER_BIT)
+	} else {
+		gl.Disable(gl.DEPTH_TEST)
+	}
 
 	gl.Viewport(0, 0, i32(s.width), i32(s.height))
 }
@@ -180,7 +196,7 @@ webgl_clear :: proc(render_target: Render_Target_Handle, color: Color) {
 
 	c := f32_color_from_color(color)
 	gl.ClearColor(c.r, c.g, c.b, c.a)
-	gl.Clear(u32(gl.COLOR_BUFFER_BIT))
+	gl.Clear(s.clear_mask)
 }
 
 webgl_present :: proc() {

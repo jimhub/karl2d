@@ -48,6 +48,7 @@ GL_State :: struct {
 	vertex_buffer_gpu: u32,
 	textures: hm.Dynamic_Handle_Map(GL_Texture, Texture_Handle),
 	render_targets: hm.Dynamic_Handle_Map(GL_Render_Target, Render_Target_Handle),
+	clear_mask: u32,
 }
 
 GL_Shader_Constant_Buffer :: struct {
@@ -155,6 +156,15 @@ gl_init :: proc(
 	} else {
 		gl.Disable(gl.MULTISAMPLE)
 	}
+
+	s.clear_mask = gl.COLOR_BUFFER_BIT
+
+	if options.depth_buffer {
+		gl.Enable(gl.DEPTH_TEST)
+		s.clear_mask |= gl.DEPTH_BUFFER_BIT
+	} else {
+		gl.Disable(gl.DEPTH_TEST)
+	}
 }
 
 gl_shutdown :: proc() {
@@ -176,7 +186,7 @@ gl_clear :: proc(render_target: Render_Target_Handle, color: Color) {
 
 	c := f32_color_from_color(color)
 	gl.ClearColor(c.r, c.g, c.b, c.a)
-	gl.Clear(gl.COLOR_BUFFER_BIT)
+	gl.Clear(s.clear_mask)
 }
 
 gl_present :: proc() {
